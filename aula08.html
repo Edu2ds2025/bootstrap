@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Gerenciamento Avançado</title>
+  <!-- Bootstrap 4.1 CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+  <!-- Font Awesome para ícones -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css">
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      padding-top: 56px;
+      background-color: #f8f9fa;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      min-width: 280px;
+      max-width: 280px;
+      background: #343a40;
+      color: #fff;
+      transition: all 0.3s;
+      position: fixed;
+      height: calc(100vh - 56px);
+      top: 56px;
+      left: 0;
+      overflow-y: auto;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    #sidebar .sidebar-header {
+      padding: 20px;
+      background: #212529;
+      border-bottom: 1px solid #495057;
+    }
+
+    #sidebar ul.components {
+      padding: 10px 0;
+    }
+
+    #sidebar ul li a {
+      padding: 12px 20px;
+      font-size: 1em;
+      display: block;
+      color: #adb5bd;
+      text-decoration: none;
+      transition: all 0.3s;
+      border-left: 3px solid transparent;
+    }
+
+    #sidebar ul li a:hover {
+      background: #495057;
+      color: #fff;
+      border-left: 3px solid #007bff;
+    }
+
+    #sidebar ul li.active > a {
+      background: #007bff;
+      color: #fff;
+      border-left: 3px solid #0056b3;
+    }
+
+    .submenu {
+      list-style: none;
+      padding-left: 0;
+      background: #2c3034;
+      display: none;
+    }
+
+    .submenu.show {
+      display: block;
+    }
+
+    .submenu a {
+      padding-left: 50px !important;
+      font-size: 0.9em;
+    }
+
+    .menu-toggle {
+      float: right;
+      transition: transform 0.3s;
+    }
+
+    .menu-toggle.rotated {
+      transform: rotate(90deg);
+    }
+
+    /* Conteúdo principal */
+    #content {
+      margin-left: 280px;
+      padding: 20px;
+      transition: margin-left 0.3s;
+    }
+
+    /* Navbar */
+    .navbar-brand span {
+      font-weight: bold;
+    }
+
+    /* Toggle button (mobile) */
+    #sidebarCollapse {
+      background: none;
+      border: none;
+      color: #fff;
+    }
+
+    /* Cards personalizados */
+    .stat-card {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      opacity: 0.7;
+    }
+
+    .progress {
+      height: 8px;
+      margin-top: 10px;
+    }
+
+    /* Gráficos */
+    .chart-container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    /* Tabelas */
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Atividades recentes */
+    .activity-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+      #sidebar {
+        margin-left: -280px;
+      }
+      #sidebar.active {
+        margin-left: 0;
+      }
+      #content {
+        margin-left: 0;
+      }
+      #content.active {
+        margin-left: 280px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Superior -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container-fluid">
+      <button type="button" id="sidebarCollapse" class="btn">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a class="navbar-brand" href="#"><span>Sistema Admin Pro</span></a>
+      
+      <!-- Search Bar -->
+      <form class="form-inline mx-3 d-none d-md-flex">
+        <input class="form-control mr-sm-2" type="search" placeholder="Pesquisar..." aria-label="Search">
+        <button class="btn btn-outline-light my-2 my-sm-0" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+            <i class="fas fa-bell"></i>
+            <span class="badge badge-danger">3</span>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right">
+            <h6 class="dropdown-header">Notificações</h6>
+            <a class="dropdown-item" href="#"><small>Novo pedido recebido</small></a>
+            <a class="dropdown-item" href="#"><small>Cliente aguarda aprovação</small></a>
+            <a class="dropdown-item" href="#"><small>Relatório mensal disponível</small></a>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+            <i class="fas fa-user-circle mr-1"></i> Admin
+          </a>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i> Meu Perfil</a>
+            <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i> Configurações</a>
+            <a class="dropdown-item" href="#"><i class="fas fa-bell mr-2"></i> Notificações</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt mr-2"></i> Sair</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Sidebar Expandido -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <h4><i class="fas fa-tachometer-alt mr-2"></i> Painel de Controle</h4>
+    </div>
+    <ul class="list-unstyled components">
+      <li class="active">
+        <a href="#"><i class="fas fa-home mr-2"></i> Dashboard</a>
+      </li>
+      
+      <!-- Menu Clientes Expandido -->
+      <li>
+        <a href="#clientSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+          <i class="fas fa-users mr-2"></i> Clientes
+          <i class="fas fa-angle-down menu-toggle"></i>
+        </a>
+        <ul class="collapse list-unstyled submenu" id="clientSubmenu">
+          <li><a href="#"><i class="fas fa-list mr-2"></i> Listar Clientes</a></li>
+          <li><a href="#"><i class="fas fa-plus mr-2"></i> Novo Cliente</a></li>
+          <li><a href="#"><i class="fas fa-chart-bar mr-2"></i> Análise de Clientes</a></li>
+          <li><a href="#"><i class="fas fa-tags mr-2"></i> Segmentação</a></li>
+        </ul>
+      </li>
+
+      <!-- Menu Produtos Expandido -->
+      <li>
+        <a href="#productSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+          <i class="fas fa-box mr-2"></i> Produtos
+          <i class="fas fa-angle-down menu-toggle"></i>
+        </a>
+        <ul class="collapse list-unstyled submenu" id="productSubmenu">
+          <li><a href="#"><i class="fas fa-list mr-2"></i> Catálogo</a></li>
+          <li><a href="#"><i class="fas fa-plus mr-2"></i> Adicionar Produto</a></li>
+          <li><a href="#"><i class="fas fa-boxes mr-2"></i> Estoque</a></li>
+          <li><a href="#"><i class="fas fa-tags mr-2"></i> Categorias</a></li>
+        </ul>
+      </li>
+
+      <!-- Menu Vendas -->
+      <li>
+        <a href="#salesSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+          <i class="fas fa-shopping-cart mr-2"></i> Vendas
+          <i class="fas fa-angle-down menu-toggle"></i>
+        </a>
+        <ul class="collapse list-unstyled submenu" id="salesSubmenu">
+          <li><a href="#"><i class="fas fa-receipt mr-2"></i> Pedidos</a></li>
+          <li><a href="#"><i class="fas fa-cash-register mr-2"></i> Nova Venda</a></li>
+          <li><a href="#"><i class="fas fa-exchange-alt mr-2"></i> Transações</a></li>
+        </ul>
+      </li>
+
+      <!-- Menu Relatórios Expandido -->
+      <li>
+        <a href="#reportsSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+          <i class="fas fa-chart-line mr-2"></i> Relatórios
+          <i class="fas fa-angle-down menu-toggle"></i>
+        </a>
+        <ul class="collapse list-unstyled submenu" id="reportsSubmenu">
+          <li><a href="#"><i class="fas fa-chart-bar mr-2"></i> Vendas</a></li>
+          <li><a href="#"><i class="fas fa-chart-pie mr-2"></i> Financeiro</a></li>
+          <li><a href="#"><i class="fas fa-chart-area mr-2"></i> Desempenho</a></li>
+          <li><a href="#"><i class="fas fa-file-export mr-2"></i> Exportar Dados</a></li>
+        </ul>
+      </li>
+
+      <!-- Menu Configurações Expandido -->
+      <li>
+        <a href="#settingsSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+          <i class="fas fa-cogs mr-2"></i> Configurações
+          <i class="fas fa-angle-down menu-toggle"></i>
+        </a>
+        <ul class="collapse list-unstyled submenu" id="settingsSubmenu">
+          <li><a href="#"><i class="fas fa-user-cog mr-2"></i> Usuários</a></li>
+          <li><a href="#"><i class="fas fa-sliders-h mr-2"></i> Sistema</a></li>
+          <li><a href="#"><i class="fas fa-bell mr-2"></i> Notificações</a></li>
+          <li><a href="#"><i class="fas fa-database mr-2"></i> Backup</a></li>
+        </ul>
+      </li>
+
+      <!-- Novos Menus -->
+      <li>
+        <a href="#"><i class="fas fa-comments mr-2"></i> Suporte</a>
+      </li>
+      <li>
+        <a href="#"><i class="fas fa-question-circle mr-2"></i> Ajuda</a>
+      </li>
+    </ul>
+
+    <!-- Status do Sistema -->
+    <div class="sidebar-footer p-3 border-top border-secondary">
+      <small class="text-muted">
+        <i class="fas fa-circle text-success mr-1"></i> Sistema Online
+        <br>
+        <small>Última atualização: Agora</small>
+      </small>
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal Expandido -->
+  <div id="content">
+    <div class="container-fluid">
+      
+      <!-- Header do Dashboard -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1">Dashboard Principal</h2>
+          <p class="text-muted mb-0">Bem-vindo de volta, Admin! Aqui está o resumo do seu negócio.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline-primary"><i class="fas fa-download mr-2"></i> Exportar</button>
+          <button class="btn btn-primary"><i class="fas fa-sync-alt mr-2"></i> Atualizar</button>
+        </div>
+      </div>
+
+      <!-- Métricas Principais -->
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card stat-card border-left-primary">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col">
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Faturamento Mensal</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">R$ 48.250</div>
+                  <div class="mt-2">
+                    <span class="text-success"><i class="fas fa-arrow-up mr-1"></i> 12.5%</span>
+                    <span class="text-muted">vs último mês</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-dollar-sign card-icon text-primary"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card stat-card border-left-success">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col">
+                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Novos Clientes</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">24</div>
+                  <div class="mt-2">
+                    <span class="text-success"><i class="fas fa-arrow-up mr-1"></i> 8.2%</span>
+                    <span class="text-muted">crescimento</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-user-plus card-icon text-success"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card stat-card border-left-info">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col">
+                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Taxa de Conversão</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">64.8%</div>
+                  <div class="progress progress-sm mt-2">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 65%"></div>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-percentage card-icon text-info"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+          <div class="card stat-card border-left-warning">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col">
+                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pedidos Pendentes</div>
+                  <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                  <div class="mt-2">
+                    <span class="text-danger"><i class="fas fa-clock mr-1"></i> 5 urgentes</span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <i class="fas fa-clipboard-list card-icon text-warning"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficos e Tabelas -->
+      <div class="row">
+        
+        <!-- Gráfico de Vendas -->
+        <div class="col-xl-8 col-lg-7">
+          <div class="chart-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h5 class="mb-0">Desempenho de Vendas</h5>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary active">Mensal</button>
+                <button class="btn btn-outline-secondary">Trimestral</button>
+                <button class="btn btn-outline-secondary">Anual</button>
+              </div>
+            </div>
+            <canvas id="salesChart" height="250"></canvas>
+          </div>
+        </div>
+
+        <!-- Métricas Secundárias -->
+        <div class="col-xl-4 col-lg-5">
+          <div class="chart-container">
+            <h5 class="mb-4">Distribuição de Vendas</h5>
+            <canvas id="distributionChart" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabelas e Listas -->
+      <div class="row mt-4">
+        
+        <!-- Pedidos Recentes -->
+        <div class="col-xl-6">
+          <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Pedidos Recentes</h5>
+              <a href="#" class="btn btn-sm btn-outline-primary">Ver Todos</a>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Pedido #</th>
+                    <th>Cliente</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>#ORD-7842</td>
+                    <td>João Silva</td>
+                    <td>R$ 1.250,00</td>
+                    <td><span class="status-badge status-active">Concluído</span></td>
+                    <td>10/11/2023</td>
+                  </tr>
+                  <tr>
+                    <td>#ORD-7841</td>
+                    <td>Maria Santos</td>
+                    <td>R$ 890,00</td>
+                    <td><span class="status-badge status-pending">Pendente</span></td>
+                    <td>10/11/2023</td>
+                  </tr>
+                  <tr>
+                    <td>#ORD-7840</td>
+                    <td>Pedro Costa</td>
+                    <td>R$ 2.150,00</td>
+                    <td><span class="status-badge status-active">Concluído</span></td>
+                    <td>09/11/2023</td>
+                  </tr>
+                  <tr>
+                    <td>#ORD-7839</td>
+                    <td>Ana Oliveira</td>
+                    <td>R$ 540,00</td>
+                    <td><span class="status-badge status-inactive">Cancelado</span></td>
+                    <td>09/11/2023</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Atividades Recentes -->
+        <div class="col-xl-6">
+          <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">Atividades Recentes</h5>
+              <a href="#" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="d-flex justify-content-between">
+                  <span class="font-weight-bold">Novo cliente cadastrado</span>
+                  <small class="text-muted">2 min atrás</small>
+                </div>
+                <small class="text-muted">Empresa XYZ foi adicionada ao sistema</small>
+              </div>
+              <div class="activity-item">
+                <div class="d-flex justify-content-between">
+                  <span class="font-weight-bold">Pedido atualizado</span>
+                  <small class="text-muted">1 hora atrás</small>
+                </div>
+                <small class="text-muted">Pedido #ORD-7841 foi para "Em transporte"</small>
+              </div>
+              <div class="activity-item">
+                <div class="d-flex justify-content-between">
+                  <span class="font-weight-bold">Relatório gerado</span>
+                  <small class="text-muted">3 horas atrás</small>
+                </div>
+                <small class="text-muted">Relatório de vendas do mês disponível</small>
+              </div>
+              <div class="activity-item">
+                <div class="d-flex justify-content-between">
+                  <span class="font-weight-bold">Produto esgotado</span>
+                  <small class="text-muted">5 horas atrás</small>
+                </div>
+                <small class="text-muted">Produto "Smartphone X" está sem estoque</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Toggle sidebar
+      $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+        $('#content').toggleClass('active');
+      });
+
+      // Rotate menu toggle icons
+      $('.dropdown-toggle').on('click', function() {
+        $(this).find('.menu-toggle').toggleClass('rotated');
+      });
+
+      // Gráfico de Vendas
+      const salesCtx = document.getElementById('salesChart').getContext('2d');
+      const salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+          datasets: [{
+            label: 'Vendas 2023',
+            data: [6500, 5900, 8000, 8100, 5600, 5500, 4000, 8200, 7800, 9800, 10200, 12000],
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+
+      // Gráfico de Distribuição
+      const distCtx = document.getElementById('distributionChart').getContext('2d');
+      const distChart = new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Eletrônicos', 'Roupas', 'Casa', 'Esportes', 'Outros'],
+          datasets: [{
+            data: [35, 25, 20, 15, 5],
+            backgroundColor: [
+              '#007bff',
+              '#28a745',
+              '#ffc107',
+              '#dc3545',
+              '#6c757d'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
